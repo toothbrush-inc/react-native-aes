@@ -13,4 +13,7 @@ declare module 'react-native-aes-crypto' {
     function sha1(text: string): Promise<string>
     function sha256(text: string): Promise<string>
     function sha512(text: string): Promise<string>
+    function encryptFile(inputPath: string, outputPath: string, key: string, iv: string, algorithm: Algorithms): Promise<string>
+    function decryptFile(inputPath: string, outputPath: string, key: string, iv: string, algorithm: Algorithms): Promise<string>
+    
 }
