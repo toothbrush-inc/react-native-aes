@@ -32,6 +32,10 @@ import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.util.encoders.Hex;
 
 import android.util.Base64;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -69,10 +73,30 @@ public class RCTAes extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void encryptFile(String inputPath, String outputPath, String key, String iv, String algorithm, Promise promise) {
+        try {
+            String result = encryptFile(inputPath, outputPath, key, iv, algorithm.toLowerCase().contains("cbc")?CIPHER_CBC_ALGORITHM:CIPHER_CTR_ALGORITHM);
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject("-1", e.getMessage());
+        }
+    }
+
+    @ReactMethod
     public void decrypt(String data, String pwd, String iv, String algorithm, Promise promise) {
         try {
             String strs = decrypt(data, pwd, iv, algorithm.toLowerCase().contains("cbc")?CIPHER_CBC_ALGORITHM:CIPHER_CTR_ALGORITHM);
             promise.resolve(strs);
+        } catch (Exception e) {
+            promise.reject("-1", e.getMessage());
+        }
+    }
+
+    @ReactMethod
+    public void decryptFile(String inputPath, String outputPath, String key, String iv, String algorithm, Promise promise) {
+        try {
+            String result = decryptFile(inputPath, outputPath, key, iv, algorithm.toLowerCase().contains("cbc")?CIPHER_CBC_ALGORITHM:CIPHER_CTR_ALGORITHM);
+            promise.resolve(result);
         } catch (Exception e) {
             promise.reject("-1", e.getMessage());
         }
@@ -241,6 +265,61 @@ public class RCTAes extends ReactContextBaseJavaModule {
         cipher.init(Cipher.DECRYPT_MODE, secretKey, hexIv == null ? emptyIvSpec : new IvParameterSpec(Hex.decode(hexIv)));
         byte[] decrypted = cipher.doFinal(Base64.decode(ciphertext, Base64.NO_WRAP));
         return new String(decrypted, "UTF-8");
+    }
+
+    private static String encryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
+        // Todo Check path validation
+        byte[] key = Hex.decode(hexKey);
+        SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
+        Cipher cipher = Cipher.getInstance(algorithm);
+
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, hexIv == null ? emptyIvSpec : new IvParameterSpec(Hex.decode(hexIv)));
+
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        try (InputStream inputStream = Files.newInputStream(Paths.get(inputPath));
+             OutputStream outputStream = Files.newOutputStream(Paths.get(outputPath))) {
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byte[] output = cipher.update(buffer, 0, bytesRead);
+                if (output != null) {
+                    outputStream.write(output);
+                }
+            }
+            byte[] outputBytes = cipher.doFinal();
+            if (outputBytes != null) {
+                outputStream.write(outputBytes);
+            }
+        }
+
+        return outputPath;
+    }
+
+    private static String decryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
+
+        byte[] key = Hex.decode(hexKey);
+        SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
+
+        Cipher cipher = Cipher.getInstance(algorithm);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, hexIv == null ? emptyIvSpec : new IvParameterSpec(Hex.decode(hexIv)));
+
+
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        try (InputStream inputStream = Files.newInputStream(Paths.get(inputPath));
+             OutputStream outputStream = Files.newOutputStream(Paths.get(outputPath))) {
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byte[] output = cipher.update(buffer, 0, bytesRead);
+                if (output != null) {
+                    outputStream.write(output);
+                }
+            }
+            byte[] outputBytes = cipher.doFinal();
+            if (outputBytes != null) {
+                outputStream.write(outputBytes);
+            }
+        }
+
+        return outputPath;
     }
 
 }
