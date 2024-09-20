@@ -2,6 +2,8 @@ package com.tectiv3.aes;
 
 import android.widget.Toast;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.SecureRandom;
@@ -34,8 +36,6 @@ import org.spongycastle.util.encoders.Hex;
 import android.util.Base64;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -268,7 +268,7 @@ public class RCTAes extends ReactContextBaseJavaModule {
     }
 
     private static String encryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
-        // Todo Check path validation
+
         byte[] key = Hex.decode(hexKey);
         SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
         Cipher cipher = Cipher.getInstance(algorithm);
@@ -277,8 +277,8 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
         byte[] buffer = new byte[8192];
         int bytesRead;
-        try (InputStream inputStream = Files.newInputStream(Paths.get(inputPath));
-             OutputStream outputStream = Files.newOutputStream(Paths.get(outputPath))) {
+        try (InputStream inputStream = new FileInputStream(inputPath);
+             OutputStream outputStream = new FileOutputStream(outputPath)) {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 byte[] output = cipher.update(buffer, 0, bytesRead);
                 if (output != null) {
@@ -305,8 +305,8 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
         byte[] buffer = new byte[8192];
         int bytesRead;
-        try (InputStream inputStream = Files.newInputStream(Paths.get(inputPath));
-             OutputStream outputStream = Files.newOutputStream(Paths.get(outputPath))) {
+        try (InputStream inputStream = new FileInputStream(inputPath);
+             OutputStream outputStream = new FileOutputStream(outputPath)) {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 byte[] output = cipher.update(buffer, 0, bytesRead);
                 if (output != null) {
