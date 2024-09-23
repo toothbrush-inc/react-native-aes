@@ -13,6 +13,51 @@
 @implementation RCTAes
 
 RCT_EXPORT_MODULE()
+// TODO need to have proper error handling
+RCT_EXPORT_METHOD(encryptFile:(NSString *)inputPath
+                  outputPath:(NSString *)outputPath
+                  key:(NSString *)key
+                  iv:(NSString *)iv
+                  algorithm:(NSString *)algorithm
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    
+    NSError *error = nil;
+
+    NSString *result = [AesCrypt encryptFile:inputPath
+                                 outputPath:outputPath
+                                 key:key
+                                 iv:iv
+                                 algorithm:algorithm];
+    if (error) {
+        reject(@"encrypt_file_fail", error.localizedDescription, error);
+    } else {
+        resolve(result);
+    }
+}
+
+// TODO need to have proper error handling
+RCT_EXPORT_METHOD(decryptFile:(NSString *)inputPath
+                  outputPath:(NSString *)outputPath
+                  key:(NSString *)key
+                  iv:(NSString *)iv
+                  algorithm:(NSString *)algorithm
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject) {
+    
+    NSError *error = nil;
+
+    NSString *result = [AesCrypt decryptFile:inputPath
+                                 outputPath:outputPath
+                                 key:key
+                                 iv:iv
+                                 algorithm:algorithm];
+    if (error) {
+        reject(@"encrypt_file_fail", error.localizedDescription, error);
+    } else {
+        resolve(result);
+    }
+}
 
 RCT_EXPORT_METHOD(encrypt:(NSString *)data key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm
                   resolver:(RCTPromiseResolveBlock)resolve
