@@ -273,21 +273,12 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
     private static String encryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
 
-        Log.d("EncryptFile", "Input Path: " + inputPath);
-        Log.d("EncryptFile", "Output Path: " + outputPath);
-
         File inputFile = new File(inputPath);
         if (!inputFile.exists()) {
             throw new FileNotFoundException("Input file not found at " + inputPath);
         }
 
         File outputFile = new File(outputPath);
-        // Ensure the file exists, create it if not
-        if (!outputFile.exists()) {
-            Log.d("Output path", "Doesn't exists" + outputFile);
-        }else {
-            Log.d("Output path", "Already exist" + outputFile);
-        }
 
         byte[] key = Hex.decode(hexKey);
         SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
@@ -312,13 +303,9 @@ public class RCTAes extends ReactContextBaseJavaModule {
             }
         }
 
-        return outputPath;
     }
 
     private static String decryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
-
-        Log.d("decryptFile", "Input Path: " + inputPath);
-        Log.d("decryptFile", "Output Path: " + outputPath);
 
         File inputFile = new File(inputPath);
         if (!inputFile.exists()) {
@@ -326,19 +313,12 @@ public class RCTAes extends ReactContextBaseJavaModule {
         }
 
         File outputFile = new File(outputPath);
-        // Ensure the file exists, create it if not
-        if (!outputFile.exists()) {
-            Log.d("Output path", "Doesn't exists" + outputFile);
-        }else {
-            Log.d("Output path", "Already exist" + outputFile);
-        }
 
         byte[] key = Hex.decode(hexKey);
         SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
 
         Cipher cipher = Cipher.getInstance(algorithm);
         cipher.init(Cipher.DECRYPT_MODE, secretKey, hexIv == null ? emptyIvSpec : new IvParameterSpec(Hex.decode(hexIv)));
-
 
         byte[] buffer = new byte[8192];
         int bytesRead;
@@ -355,8 +335,7 @@ public class RCTAes extends ReactContextBaseJavaModule {
                 outputStream.write(outputBytes);
             }
         }
-
-        return outputPath;
+        
     }
 
 }
