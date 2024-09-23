@@ -263,4 +263,15 @@
     return [self toHex:data];
 }
 
++ (NSString *)encryptFile:(NSString *)inputPath outputPath:(NSString *)outputPath key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm {
+    return outputPath;
+
+}
+
++ (NSString *)decryptFile:(NSString *)inputPath outputPath:(NSString *)outputPath key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm {
+    return outputPath;
+}
+
+
+
 @end
