@@ -1,8 +1,12 @@
 package com.tectiv3.aes;
 
+import android.net.Uri;
+import android.util.Log;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -269,16 +273,33 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
     private static String encryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
 
+        Log.d("EncryptFile", "Input Path: " + inputPath);
+        Log.d("EncryptFile", "Output Path: " + outputPath);
+
+        File inputFile = new File(inputPath);
+        if (!inputFile.exists()) {
+            throw new FileNotFoundException("Input file not found at " + inputPath);
+        }
+
+        File outputFile = new File(outputPath);
+        // Ensure the file exists, create it if not
+        if (!outputFile.exists()) {
+            Log.d("Output path", "Doesn't exists" + outputFile);
+        }else {
+            Log.d("Output path", "Already exist" + outputFile);
+        }
+
         byte[] key = Hex.decode(hexKey);
         SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
         Cipher cipher = Cipher.getInstance(algorithm);
-
         cipher.init(Cipher.ENCRYPT_MODE, secretKey, hexIv == null ? emptyIvSpec : new IvParameterSpec(Hex.decode(hexIv)));
 
         byte[] buffer = new byte[8192];
         int bytesRead;
-        try (InputStream inputStream = new FileInputStream(inputPath);
-             OutputStream outputStream = new FileOutputStream(outputPath)) {
+        try (
+            InputStream inputStream = new FileInputStream(inputFile);
+            OutputStream outputStream = new FileOutputStream(outputFile)
+        ) {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 byte[] output = cipher.update(buffer, 0, bytesRead);
                 if (output != null) {
@@ -296,6 +317,22 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
     private static String decryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
 
+        Log.d("decryptFile", "Input Path: " + inputPath);
+        Log.d("decryptFile", "Output Path: " + outputPath);
+
+        File inputFile = new File(inputPath);
+        if (!inputFile.exists()) {
+            throw new FileNotFoundException("Input file not found at " + inputPath);
+        }
+
+        File outputFile = new File(outputPath);
+        // Ensure the file exists, create it if not
+        if (!outputFile.exists()) {
+            Log.d("Output path", "Doesn't exists" + outputFile);
+        }else {
+            Log.d("Output path", "Already exist" + outputFile);
+        }
+
         byte[] key = Hex.decode(hexKey);
         SecretKey secretKey = new SecretKeySpec(key, KEY_ALGORITHM);
 
@@ -305,8 +342,8 @@ public class RCTAes extends ReactContextBaseJavaModule {
 
         byte[] buffer = new byte[8192];
         int bytesRead;
-        try (InputStream inputStream = new FileInputStream(inputPath);
-             OutputStream outputStream = new FileOutputStream(outputPath)) {
+        try (InputStream inputStream = new FileInputStream(inputFile);
+             OutputStream outputStream = new FileOutputStream(outputFile)) {
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 byte[] output = cipher.update(buffer, 0, bytesRead);
                 if (output != null) {
