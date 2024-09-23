@@ -302,7 +302,8 @@ public class RCTAes extends ReactContextBaseJavaModule {
                 outputStream.write(outputBytes);
             }
         }
-
+        // represent success
+        return outputPath
     }
 
     private static String decryptFile(String inputPath, String outputPath, String hexKey, String hexIv, String algorithm) throws Exception {
@@ -335,7 +336,8 @@ public class RCTAes extends ReactContextBaseJavaModule {
                 outputStream.write(outputBytes);
             }
         }
-        
+        // represent success
+        return outputPath
     }
 
 }
