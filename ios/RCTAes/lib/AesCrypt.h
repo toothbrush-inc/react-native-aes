@@ -19,4 +19,9 @@
 + (NSString *) toHex: (NSData *)nsdata;
 + (NSString *) randomUuid;
 + (NSString *) randomKey: (NSInteger)length;
+// New method for encrypting files
++ (NSString *)encryptFile:(NSString *)inputPath outputPath:(NSString *)outputPath key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm;
+// New method for decrypting files
++ (NSString *)decryptFile:(NSString *)inputPath outputPath:(NSString *)outputPath key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm;
+
 @end
