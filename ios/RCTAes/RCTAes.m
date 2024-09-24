@@ -23,14 +23,13 @@ RCT_EXPORT_METHOD(encryptFile:(NSString *)inputPath
                   rejecter:(RCTPromiseRejectBlock)reject) {
     
     NSError *error = nil;
-
     NSString *result = [AesCrypt encryptFile:inputPath
                                  outputPath:outputPath
                                  key:key
                                  iv:iv
                                  algorithm:algorithm];
-    if (error) {
-        reject(@"encrypt_file_fail", error.localizedDescription, error);
+    if (result == nil) {
+        reject(@"encrypt_file_fail", @"Encrypt error", error);
     } else {
         resolve(result);
     }
@@ -46,14 +45,13 @@ RCT_EXPORT_METHOD(decryptFile:(NSString *)inputPath
                   rejecter:(RCTPromiseRejectBlock)reject) {
     
     NSError *error = nil;
-
     NSString *result = [AesCrypt decryptFile:inputPath
                                  outputPath:outputPath
                                  key:key
                                  iv:iv
                                  algorithm:algorithm];
-    if (error) {
-        reject(@"encrypt_file_fail", error.localizedDescription, error);
+    if (result == nil) {
+        reject(@"decrypt_file_fail", @"Decrypt error", error);
     } else {
         resolve(result);
     }
