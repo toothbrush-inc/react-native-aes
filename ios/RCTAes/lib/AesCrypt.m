@@ -264,14 +264,245 @@
 }
 
 + (NSString *)encryptFile:(NSString *)inputPath outputPath:(NSString *)outputPath key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm {
-    return outputPath;
 
+    if ([algorithm containsString:@"ctr"]) {
+        NSLog(@"This algorithm, %@ is not supported for now", algorithm);
+        return nil;
+    }
+    else{
+        
+        // Convert hex string to hex data
+        NSData *keyData = [self fromHex:key];
+        NSData *ivData = [self fromHex:iv];
+        size_t numBytes = 0;
+        
+        NSArray *aesAlgorithms = @[@"aes-128-cbc", @"aes-192-cbc", @"aes-256-cbc"];
+        size_t item = [aesAlgorithms indexOfObject:algorithm];
+        size_t keyLength;
+        switch (item) {
+            case 0:
+                keyLength = kCCKeySizeAES128;
+                break;
+            case 1:
+                keyLength = kCCKeySizeAES192;
+                break;
+            default:
+                keyLength = kCCKeySizeAES256;
+                break;
+        }
+        
+        // Create input and output streams for reading and writing files
+        NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:inputPath];
+        NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:outputPath append:NO];
+
+        // Open the streams and check for errors
+        [inputStream open];
+        [outputStream open];
+        if (![inputStream hasBytesAvailable] || ![outputStream hasSpaceAvailable]) {
+            [inputStream close];
+            [outputStream close];
+            NSLog(@"Failed creating streams");
+            [self cleanUpOutputFile:outputPath]; // Clean up the output file
+            return nil;
+        }
+
+        // Initialize CCCryptor
+        CCCryptorRef cryptor = NULL;
+        CCCryptorStatus cryptStatus = CCCryptorCreateWithMode(
+                                                              kCCEncrypt,
+                                                              kCCModeCBC,
+                                                              kCCAlgorithmAES,
+                                                              ccPKCS7Padding,
+                                                              ivData.bytes,
+                                                              keyData.bytes,
+                                                              keyLength,
+                                                              NULL,
+                                                              0,
+                                                              0,
+                                                              0,
+                                                              &cryptor
+                                                              );
+        
+        
+        if (cryptStatus != kCCSuccess || cryptor == NULL) {
+            [inputStream close];
+            [outputStream close];
+            NSLog(@"Failed creating cryptor, %d", cryptStatus);
+            [self cleanUpOutputFile:outputPath]; // Clean up the output file
+            return nil;
+        }
+
+        // Buffer size for reading data in chunks
+        uint8_t buffer[8192];
+        size_t cipherBufferSize = CCCryptorGetOutputLength(cryptor, sizeof(buffer), true);
+        uint8_t cipherBuffer[cipherBufferSize];
+        size_t outLength = 0;
+        
+        // Read and encrypt data in chunks
+        NSInteger bytesRead;
+        while ((bytesRead = [inputStream read:buffer maxLength:sizeof(buffer)]) > 0) {
+            cryptStatus = CCCryptorUpdate(cryptor, buffer, bytesRead, cipherBuffer, cipherBufferSize, &outLength);
+            if (cryptStatus != kCCSuccess) {
+                [inputStream close];
+                [outputStream close];
+                CCCryptorRelease(cryptor);
+                NSLog(@"Failed during encryption, %d", cryptStatus);
+                [self cleanUpOutputFile:outputPath]; // Clean up the output file
+                return nil;
+            }
+            
+            [outputStream write:cipherBuffer maxLength:outLength];
+        }
+        
+        // Finalize encryption
+        cryptStatus = CCCryptorFinal(cryptor, cipherBuffer, cipherBufferSize, &outLength);
+        if (cryptStatus == kCCSuccess) {
+            [outputStream write:cipherBuffer maxLength:outLength];
+        } else {
+            [inputStream close];
+            [outputStream close];
+            CCCryptorRelease(cryptor);
+            NSLog(@"Failed during finalizing encryption, %d", cryptStatus);
+            [self cleanUpOutputFile:outputPath]; // Clean up the output file
+            return nil;
+        }
+        
+        // Clean up
+        [inputStream close];
+        [outputStream close];
+        CCCryptorRelease(cryptor);
+        
+        // Return the output path upon successful encryption
+        return outputPath;
+    }
+    
 }
 
 + (NSString *)decryptFile:(NSString *)inputPath outputPath:(NSString *)outputPath key:(NSString *)key iv:(NSString *)iv algorithm:(NSString *)algorithm {
-    return outputPath;
+    
+    if ([algorithm containsString:@"ctr"]) {
+        NSLog(@"This algorithm, %@ is not supported for now", algorithm);
+        return nil;
+    }
+    else{
+        
+        // Convert hex string to hex data
+        NSData *keyData = [self fromHex:key];
+        NSData *ivData = [self fromHex:iv];
+        size_t numBytes = 0;
+        
+        NSArray *aesAlgorithms = @[@"aes-128-cbc", @"aes-192-cbc", @"aes-256-cbc"];
+        size_t item = [aesAlgorithms indexOfObject:algorithm];
+        size_t keyLength;
+        switch (item) {
+            case 0:
+                keyLength = kCCKeySizeAES128;
+                break;
+            case 1:
+                keyLength = kCCKeySizeAES192;
+                break;
+            default:
+                keyLength = kCCKeySizeAES256;
+                break;
+        }
+        
+        // Create input and output streams for reading and writing files
+        NSInputStream *inputStream = [NSInputStream inputStreamWithFileAtPath:inputPath];
+        NSOutputStream *outputStream = [NSOutputStream outputStreamToFileAtPath:outputPath append:NO];
+
+        // Open the streams and check for errors
+        [inputStream open];
+        [outputStream open];
+        if (![inputStream hasBytesAvailable] || ![outputStream hasSpaceAvailable]) {
+            [inputStream close];
+            [outputStream close];
+            NSLog(@"Failed creating streams");
+            [self cleanUpOutputFile:outputPath]; // Clean up the output file
+            return nil;
+        }
+
+        // Initialize CCCryptor
+        CCCryptorRef cryptor = NULL;
+        CCCryptorStatus cryptStatus = CCCryptorCreateWithMode(
+                                                              kCCDecrypt,
+                                                              kCCModeCBC,
+                                                              kCCAlgorithmAES,
+                                                              ccPKCS7Padding,
+                                                              ivData.bytes,
+                                                              keyData.bytes,
+                                                              keyLength,
+                                                              NULL,
+                                                              0,
+                                                              0,
+                                                              0,
+                                                              &cryptor
+                                                              );
+        
+        
+        if (cryptStatus != kCCSuccess || cryptor == NULL) {
+            [inputStream close];
+            [outputStream close];
+            NSLog(@"Failed creating cryptor, %d", cryptStatus);
+            [self cleanUpOutputFile:outputPath]; // Clean up the output file
+            return nil;
+        }
+
+        // Buffer size for reading data in chunks
+        uint8_t buffer[8192];
+        size_t cipherBufferSize = CCCryptorGetOutputLength(cryptor, sizeof(buffer), true);
+        uint8_t cipherBuffer[cipherBufferSize];
+        size_t outLength = 0;
+        
+        // Read and encrypt data in chunks
+        NSInteger bytesRead;
+        while ((bytesRead = [inputStream read:buffer maxLength:sizeof(buffer)]) > 0) {
+            cryptStatus = CCCryptorUpdate(cryptor, buffer, bytesRead, cipherBuffer, cipherBufferSize, &outLength);
+            if (cryptStatus != kCCSuccess) {
+                [inputStream close];
+                [outputStream close];
+                CCCryptorRelease(cryptor);
+                NSLog(@"Failed during encryption, %d", cryptStatus);
+                [self cleanUpOutputFile:outputPath]; // Clean up the output file
+                return nil;
+            }
+            
+            [outputStream write:cipherBuffer maxLength:outLength];
+        }
+        
+        // Finalize encryption
+        cryptStatus = CCCryptorFinal(cryptor, cipherBuffer, cipherBufferSize, &outLength);
+        if (cryptStatus == kCCSuccess) {
+            [outputStream write:cipherBuffer maxLength:outLength];
+        } else {
+            [inputStream close];
+            [outputStream close];
+            CCCryptorRelease(cryptor);
+            NSLog(@"Failed during finalizing encryption, %d", cryptStatus);
+            [self cleanUpOutputFile:outputPath]; // Clean up the output file
+            return nil;
+        }
+        
+        // Clean up
+        [inputStream close];
+        [outputStream close];
+        CCCryptorRelease(cryptor);
+        
+        // Return the output path upon successful encryption
+        return outputPath;
+    }
+
 }
 
-
+// Helper method to clean up the output file
++ (void)cleanUpOutputFile:(NSString *)outputPath {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:outputPath]) {
+        NSError *error = nil;
+        [fileManager removeItemAtPath:outputPath error:&error];
+        if (error) {
+            NSLog(@"Error cleaning up output file: %@", error.localizedDescription);
+        }
+    }
+}
 
 @end
